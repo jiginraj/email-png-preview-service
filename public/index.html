@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PNG Email Attachment Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        input[type="email"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="email"]:focus,
+        input[type="text"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: block;
+            padding: 20px;
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            text-align: center;
+            background: #f8f9ff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-upload-label:hover {
+            background: #e8ebff;
+            border-color: #5a6cf0;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .status.success {
+            background: #d1edff;
+            color: #0066cc;
+            border: 1px solid #b3d9ff;
+        }
+
+        .status.error {
+            background: #ffe6e6;
+            color: #cc0000;
+            border: 1px solid #ffb3b3;
+        }
+
+        .file-list {
+            margin-top: 15px;
+        }
+
+        .file-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-section {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-section h3 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .info-section p {
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 PNG Email Server</h1>
+            <p>Send beautiful emails with PNG attachments and inline previews</p>
+        </div>
+        
+        <div class="content">
+            <div class="info-section">
+                <h3>🔧 Setup Instructions</h3>
+                <p>
+                    Before sending emails, make sure to configure your email settings in the server.js file or set environment variables:
+                    <br><strong>EMAIL_USER</strong> and <strong>EMAIL_PASS</strong>
+                    <br>For Gmail, you'll need to use an App Password instead of your regular password.
+                </p>
+            </div>
+
+            <button class="btn btn-secondary" onclick="testEmailConfig()">Test Email Configuration</button>
+
+            <form id="emailForm">
+                <div class="form-group">
+                    <label for="to">To Email *</label>
+                    <input type="email" id="to" name="to" required placeholder="recipient@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject *</label>
+                    <input type="text" id="subject" name="subject" required placeholder="Sample Email with PNG Attachments">
+                </div>
+
+                <div class="form-group">
+                    <label for="message">Custom Message (optional)</label>
+                    <textarea id="message" name="message" placeholder="Add your custom message here... (HTML supported)"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>PNG Files (optional - will use sample images if none uploaded)</label>
+                    <div class="file-upload">
+                        <input type="file" id="pngFiles" name="pngFiles" multiple accept=".png" onchange="updateFileList()">
+                        <label for="pngFiles" class="file-upload-label">
+                            <div class="file-upload-icon">📎</div>
+                            <div>Click to select PNG files or drag and drop</div>
+                            <div style="font-size: 14px; color: #666; margin-top: 5px;">Multiple PNG files supported</div>
+                        </label>
+                    </div>
+                    <div id="fileList" class="file-list"></div>
+                </div>
+
+                <button type="submit" class="btn">Send Email with PNG Attachments</button>
+            </form>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <div>Sending email...</div>
+            </div>
+
+            <div id="status" class="status"></div>
+        </div>
+    </div>
+
+    <script>
+        function updateFileList() {
+            const fileInput = document.getElementById('pngFiles');
+            const fileList = document.getElementById('fileList');
+            
+            fileList.innerHTML = '';
+            
+            if (fileInput.files.length > 0) {
+                Array.from(fileInput.files).forEach((file, index) => {
+                    const fileItem = document.createElement('div');
+                    fileItem.className = 'file-item';
+                    fileItem.innerHTML = `
+                        <span>📄 ${file.name} (${(file.size / 1024).toFixed(1)} KB)</span>
+                        <button type="button" onclick="removeFile(${index})" style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Remove</button>
+                    `;
+                    fileList.appendChild(fileItem);
+                });
+            }
+        }
+
+        function removeFile(index) {
+            const fileInput = document.getElementById('pngFiles');
+            const dt = new DataTransfer();
+            
+            Array.from(fileInput.files).forEach((file, i) => {
+                if (i !== index) {
+                    dt.items.add(file);
+                }
+            });
+            
+            fileInput.files = dt.files;
+            updateFileList();
+        }
+
+        async function testEmailConfig() {
+            const btn = document.querySelector('.btn-secondary');
+            const originalText = btn.textContent;
+            btn.disabled = true;
+            btn.textContent = 'Testing...';
+
+            try {
+                const response = await fetch('/test-email-config');
+                const result = await response.json();
+                
+                showStatus(result.success ? 'success' : 'error', result.message);
+            } catch (error) {
+                showStatus('error', 'Failed to test email configuration: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        }
+
+        document.getElementById('emailForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            formData.append('to', document.getElementById('to').value);
+            formData.append('subject', document.getElementById('subject').value);
+            formData.append('message', document.getElementById('message').value);
+            
+            const fileInput = document.getElementById('pngFiles');
+            Array.from(fileInput.files).forEach(file => {
+                formData.append('pngFiles', file);
+            });
+
+            // Show loading
+            document.getElementById('loading').style.display = 'block';
+            document.querySelector('.btn').disabled = true;
+            document.getElementById('status').style.display = 'none';
+
+            try {
+                const response = await fetch('/send-email', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('success', result.message + (result.messageId ? ` (Message ID: ${result.messageId})` : ''));
+                    document.getElementById('emailForm').reset();
+                    updateFileList();
+                } else {
+                    showStatus('error', result.error || 'Failed to send email');
+                }
+            } catch (error) {
+                showStatus('error', 'Network error: ' + error.message);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.querySelector('.btn').disabled = false;
+            }
+        });
+
+        function showStatus(type, message) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            status.textContent = message;
+            status.style.display = 'block';
+            
+            // Auto-hide after 10 seconds
+            setTimeout(() => {
+                status.style.display = 'none';
+            }, 10000);
+        }
+
+        // Drag and drop functionality
+        const fileUpload = document.querySelector('.file-upload');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, highlight, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            fileUpload.addEventListener(eventName, unhighlight, false);
+        });
+
+        function highlight(e) {
+            fileUpload.classList.add('drag-over');
+        }
+
+        function unhighlight(e) {
+            fileUpload.classList.remove('drag-over');
+        }
+
+        fileUpload.addEventListener('drop', handleDrop, false);
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            const fileInput = document.getElementById('pngFiles');
+            
+            // Filter for PNG files only
+            const pngFiles = Array.from(files).filter(file => file.type === 'image/png');
+            
+            if (pngFiles.length > 0) {
+                const dataTransfer = new DataTransfer();
+                pngFiles.forEach(file => dataTransfer.items.add(file));
+                fileInput.files = dataTransfer.files;
+                updateFileList();
+            }
+        }
+    </script>
+</body>
+</html> 
